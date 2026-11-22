@@ -1,0 +1,228 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1120" viewBox="0 0 1680 1120" role="img" aria-labelledby="title description">
+  <title id="title">Private mTLS API on AWS in London</title>
+  <desc id="description">Presentation diagram of a private two-Availability-Zone VPC with an internal mTLS Application Load Balancer, VPC-attached Lambda, private service endpoints, S3 CA bundle, ALB access and TLS connection logs, SSM and KMS configuration, CloudWatch observability, and GitHub Actions OIDC plan role. This is a Terraform design and has not been deployed.</desc>
+  <defs>
+    <linearGradient id="header" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#12233f"/>
+      <stop offset="1" stop-color="#203d63"/>
+    </linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#10243e" flood-opacity=".10"/>
+    </filter>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2878c7"/>
+    </marker>
+    <marker id="arrow-amber" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d88b16"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#24835b"/>
+    </marker>
+    <style>
+      text { font-family: Inter, "Segoe UI", Arial, sans-serif; fill: #182b45; }
+      .title { font-size: 32px; font-weight: 700; fill: #fff; }
+      .subtitle { font-size: 15px; fill: #d7e4f2; }
+      .section { font-size: 16px; font-weight: 700; letter-spacing: .5px; }
+      .card-title { font-size: 15px; font-weight: 700; }
+      .body { font-size: 12px; fill: #4a5d73; }
+      .small { font-size: 11px; fill: #53677f; }
+      .tiny { font-size: 10px; fill: #61758b; }
+      .white { fill: #fff; }
+      .flow { fill: none; stroke: #2878c7; stroke-width: 3; marker-end: url(#arrow-blue); }
+      .config { fill: none; stroke: #d88b16; stroke-width: 2.5; stroke-dasharray: 8 6; marker-end: url(#arrow-amber); }
+      .logging { fill: none; stroke: #24835b; stroke-width: 2.5; marker-end: url(#arrow-green); }
+      .card { fill: #fff; stroke: #d5deea; stroke-width: 1.4; rx: 12; filter: url(#shadow); }
+      .service { fill: #fff; stroke: #cbd6e4; stroke-width: 1.2; rx: 10; }
+    </style>
+  </defs>
+
+  <rect width="1680" height="1120" fill="#f3f6fa"/>
+  <rect x="0" y="0" width="1680" height="126" fill="url(#header)"/>
+  <text class="title" x="48" y="57" style="fill:#ffffff">Private mTLS API on AWS</text>
+  <text class="subtitle" x="50" y="88" style="fill:#d7e4f2">Terraform reference design • London region (eu-west-2) • private ingress • no NAT or public subnets</text>
+  <rect x="1324" y="38" width="310" height="42" rx="21" fill="#fff2d6" stroke="#f1c36d"/>
+  <circle cx="1350" cy="59" r="6" fill="#d88b16"/>
+  <text x="1365" y="64" font-size="12" font-weight="700" fill="#754a08">DESIGN ONLY — NOT DEPLOYED</text>
+
+  <!-- External actors -->
+  <rect x="32" y="205" width="222" height="118" rx="14" fill="#fff" stroke="#cbd6e4" stroke-width="1.4" filter="url(#shadow)"/>
+  <circle cx="65" cy="243" r="19" fill="#e9f2fc"/>
+  <path d="M57 246h16v12H57z M60 241a5 5 0 0 1 10 0v5H60z" fill="none" stroke="#2878c7" stroke-width="2"/>
+  <text class="card-title" x="94" y="241">Private client</text>
+  <text class="body" x="52" y="278">Corporate network / VPN</text>
+  <text class="small" x="52" y="298">Client certificate signed by CA</text>
+
+  <rect x="32" y="790" width="222" height="130" rx="14" fill="#fff" stroke="#cbd6e4" stroke-width="1.4" filter="url(#shadow)"/>
+  <circle cx="65" cy="828" r="19" fill="#f3eaff"/>
+  <path d="M55 823h20v14H55z M59 819h12v4H59z M60 827h10 M60 831h7" fill="none" stroke="#7353a6" stroke-width="1.8"/>
+  <text class="card-title" x="94" y="826">GitHub Actions</text>
+  <text class="body" x="52" y="863">OIDC token → plan role</text>
+  <text class="small" x="52" y="883">Plan only • no apply permission</text>
+  <text class="tiny" x="52" y="903">main only • backend=false (no state)</text>
+
+  <!-- AWS account boundary -->
+  <rect x="278" y="150" width="1372" height="914" rx="22" fill="#fff" stroke="#9eacbd" stroke-width="1.5"/>
+  <rect x="278" y="150" width="1372" height="48" rx="22" fill="#edf2f7"/>
+  <path d="M278 176v22h1372v-22" fill="#edf2f7"/>
+  <text class="section" x="304" y="181">AWS ACCOUNT</text>
+  <text class="small" x="1484" y="180" text-anchor="end">Resources shown are proposed, not provisioned</text>
+
+  <!-- AWS global IAM role -->
+  <rect x="1280" y="210" width="340" height="78" rx="12" fill="#f7f3ff" stroke="#bca9dc" stroke-width="1.3"/>
+  <circle cx="1310" cy="249" r="17" fill="#7451a6"/>
+  <text x="1310" y="253" text-anchor="middle" font-size="10" font-weight="700" class="white" style="fill:#ffffff">IAM</text>
+  <text class="card-title" x="1337" y="243">GitHub OIDC plan role</text>
+  <text class="small" x="1337" y="263">Account-level (IAM is global)</text>
+  <path class="config" d="M254 855 C290 855 285 250 1272 250"/>
+
+  <!-- Region boundary -->
+  <rect x="300" y="306" width="1328" height="704" rx="18" fill="#f8fbff" stroke="#7894b5" stroke-width="2"/>
+  <rect x="300" y="306" width="1328" height="48" rx="18" fill="#e8f0fa"/>
+  <path d="M300 336v18h1328v-18" fill="#e8f0fa"/>
+  <text class="section" x="326" y="337">AWS REGION • EU-WEST-2 (LONDON)</text>
+  <text class="small" x="1598" y="337" text-anchor="end">VPC endpoints keep service traffic private</text>
+
+  <!-- VPC -->
+  <rect x="325" y="374" width="908" height="594" rx="16" fill="#fff" stroke="#e28b36" stroke-width="2"/>
+  <rect x="325" y="374" width="908" height="44" rx="16" fill="#fff3e7"/>
+  <path d="M325 400v18h908v-18" fill="#fff3e7"/>
+  <text class="section" x="349" y="403">VPC • 10.20.0.0/16</text>
+  <rect x="1013" y="384" width="199" height="25" rx="12" fill="#fff" stroke="#edc08d"/>
+  <text x="1112" y="401" text-anchor="middle" font-size="10" font-weight="700" fill="#8a5319">NO IGW • NO NAT • NO PUBLIC SUBNETS</text>
+
+  <!-- Client flow -->
+  <path class="flow" d="M254 264 C292 264 280 472 370 472"/>
+  <rect x="275" y="278" width="124" height="26" rx="13" fill="#e7f1fc"/>
+  <text x="337" y="296" text-anchor="middle" font-size="10" font-weight="700" fill="#205f9f">HTTPS + mTLS</text>
+
+  <!-- ALB -->
+  <rect class="card" x="375" y="438" width="808" height="102"/>
+  <circle cx="411" cy="474" r="20" fill="#ef9b3b"/>
+  <text x="411" y="478" text-anchor="middle" font-size="10" font-weight="700" class="white" style="fill:#ffffff">ALB</text>
+  <text class="card-title" x="445" y="468">Internal Application Load Balancer</text>
+  <text class="body" x="445" y="490">HTTPS listener • mTLS verify mode • VPC-CIDR ingress only</text>
+  <text class="small" x="445" y="515">Lambda target group • /health check • not internet accessible</text>
+  <rect x="1016" y="452" width="139" height="28" rx="14" fill="#e8f6ef"/>
+  <text x="1085" y="470" text-anchor="middle" font-size="10" font-weight="700" fill="#20704e">TLS TERMINATES HERE</text>
+
+  <!-- ALB to Lambda -->
+  <path class="flow" d="M780 540v37"/>
+  <rect x="809" y="545" width="174" height="24" rx="12" fill="#e7f1fc"/>
+  <text x="896" y="562" text-anchor="middle" font-size="10" font-weight="700" fill="#205f9f">AWS Lambda integration</text>
+
+  <!-- Lambda -->
+  <rect class="card" x="570" y="579" width="420" height="105"/>
+  <circle cx="607" cy="616" r="20" fill="#ef9b3b"/>
+  <text x="607" y="620" text-anchor="middle" font-size="10" font-weight="700" class="white" style="fill:#ffffff">λ</text>
+  <text class="card-title" x="641" y="610">Python 3.12 Lambda</text>
+  <text class="body" x="641" y="633">POST JSON validation • response + request ID</text>
+  <text class="small" x="641" y="656">VPC ENIs • SSM config • scoped execution role</text>
+  <text class="tiny" x="641" y="674">SSM/KMS • CloudWatch Logs • ENI permissions</text>
+
+  <!-- Availability Zones -->
+  <rect x="350" y="708" width="405" height="202" rx="13" fill="#f5f9fe" stroke="#9bb6d5" stroke-width="1.4"/>
+  <rect x="350" y="708" width="405" height="34" rx="13" fill="#e7f0fa"/>
+  <path d="M350 728v14h405v-14" fill="#e7f0fa"/>
+  <text class="card-title" x="370" y="731">Availability Zone A • private subnet</text>
+  <text class="small" x="370" y="763">10.20.0.0/24 • no public IPs</text>
+  <rect class="service" x="370" y="780" width="164" height="86"/>
+  <circle cx="394" cy="804" r="13" fill="#ef9b3b"/>
+  <text x="394" y="808" text-anchor="middle" font-size="9" font-weight="700" class="white" style="fill:#ffffff">ENI</text>
+  <text class="card-title" x="416" y="807">Lambda ENI</text>
+  <text class="tiny" x="385" y="834">private service egress</text>
+  <text class="tiny" x="385" y="851">security-group controlled</text>
+  <rect class="service" x="547" y="780" width="188" height="86"/>
+  <circle cx="571" cy="804" r="13" fill="#3c8cbd"/>
+  <text x="571" y="808" text-anchor="middle" font-size="8" font-weight="700" class="white" style="fill:#ffffff">VPCE</text>
+  <text class="card-title" x="593" y="807">Interface endpoints</text>
+  <text class="tiny" x="562" y="834">SSM + CloudWatch Logs</text>
+  <text class="tiny" x="562" y="851">private DNS enabled</text>
+
+  <rect x="780" y="708" width="428" height="202" rx="13" fill="#f5f9fe" stroke="#9bb6d5" stroke-width="1.4"/>
+  <rect x="780" y="708" width="428" height="34" rx="13" fill="#e7f0fa"/>
+  <path d="M780 728v14h428v-14" fill="#e7f0fa"/>
+  <text class="card-title" x="800" y="731">Availability Zone B • private subnet</text>
+  <text class="small" x="800" y="763">10.20.1.0/24 • no public IPs</text>
+  <rect class="service" x="800" y="780" width="164" height="86"/>
+  <circle cx="824" cy="804" r="13" fill="#ef9b3b"/>
+  <text x="824" y="808" text-anchor="middle" font-size="9" font-weight="700" class="white" style="fill:#ffffff">ENI</text>
+  <text class="card-title" x="846" y="807">Lambda ENI</text>
+  <text class="tiny" x="815" y="834">private service egress</text>
+  <text class="tiny" x="815" y="851">security-group controlled</text>
+  <rect class="service" x="977" y="780" width="211" height="86"/>
+  <circle cx="1001" cy="804" r="13" fill="#3c8cbd"/>
+  <text x="1001" y="808" text-anchor="middle" font-size="8" font-weight="700" class="white" style="fill:#ffffff">VPCE</text>
+  <text class="card-title" x="1023" y="807">Interface endpoints</text>
+  <text class="tiny" x="992" y="834">SSM + CloudWatch Logs</text>
+  <text class="tiny" x="992" y="851">private DNS enabled</text>
+
+  <!-- Lambda network links -->
+  <text class="tiny" x="350" y="892">S3 gateway endpoint on private routes (configured; not used by this Lambda)</text>
+  <path d="M340 925h870" stroke="#c9d6e5" stroke-width="1.3" stroke-dasharray="4 5"/>
+  <text class="small" x="775" y="948" text-anchor="middle">No NAT gateway or internet gateway is provisioned</text>
+
+  <!-- Regional AWS services -->
+  <rect x="1255" y="374" width="350" height="594" rx="16" fill="#fff" stroke="#c6d3e2" stroke-width="1.5"/>
+  <text class="section" x="1278" y="403">AWS MANAGED SERVICES</text>
+
+  <rect class="service" x="1278" y="425" width="304" height="107"/>
+  <circle cx="1307" cy="455" r="16" fill="#c85a18"/>
+  <text x="1307" y="459" text-anchor="middle" font-size="8" font-weight="700" class="white" style="fill:#ffffff">S3</text>
+  <text class="card-title" x="1334" y="454">Private S3 buckets</text>
+  <text class="body" x="1295" y="483">CA trust bundle • SSE-S3 • versioned</text>
+  <text class="small" x="1295" y="501">ALB access + TLS connection logs</text>
+  <text class="tiny" x="1295" y="519">Public access blocked • logs expire in 30 days</text>
+
+  <rect class="service" x="1278" y="547" width="304" height="86"/>
+  <circle cx="1307" cy="576" r="16" fill="#d88918"/>
+  <text x="1307" y="580" text-anchor="middle" font-size="8" font-weight="700" class="white" style="fill:#ffffff">ACM</text>
+  <text class="card-title" x="1334" y="575">ACM imported certificate</text>
+  <text class="body" x="1295" y="604">Server certificate for ALB HTTPS</text>
+  <text class="tiny" x="1295" y="623">Assessment CA; production PKI follow-up</text>
+
+  <rect class="service" x="1278" y="648" width="304" height="113"/>
+  <circle cx="1307" cy="678" r="16" fill="#6d54a3"/>
+  <text x="1307" y="682" text-anchor="middle" font-size="8" font-weight="700" class="white" style="fill:#ffffff">SSM</text>
+  <text class="card-title" x="1334" y="677">Parameter Store</text>
+  <text class="body" x="1295" y="706">Encrypted runtime configuration</text>
+  <circle cx="1307" cy="736" r="13" fill="#3678a8"/>
+  <text x="1307" y="740" text-anchor="middle" font-size="8" font-weight="700" class="white" style="fill:#ffffff">KMS</text>
+  <text class="small" x="1334" y="740">Customer-managed key • decrypt via SSM</text>
+
+  <rect class="service" x="1278" y="776" width="304" height="174"/>
+  <circle cx="1307" cy="806" r="16" fill="#7056a5"/>
+  <text x="1307" y="810" text-anchor="middle" font-size="8" font-weight="700" class="white" style="fill:#ffffff">CW</text>
+  <text class="card-title" x="1334" y="805">CloudWatch</text>
+  <text class="body" x="1295" y="834">Lambda + API access log groups</text>
+  <text class="small" x="1295" y="855">30-day retention • Lambda error alarm</text>
+  <path d="M1295 870h267" stroke="#e0e6ee"/>
+  <circle cx="1307" cy="903" r="15" fill="#d24a48"/>
+  <text x="1307" y="907" text-anchor="middle" font-size="8" font-weight="700" class="white" style="fill:#ffffff">SNS</text>
+  <text class="card-title" x="1334" y="902">SNS alert topic</text>
+  <text class="tiny" x="1295" y="932">Stub only • no subscriber configured</text>
+
+  <!-- Service relationships -->
+  <path class="config" d="M1183 463 C1223 463 1230 470 1272 470"/>
+  <text class="tiny" x="1200" y="448">mTLS CA trust</text>
+  <path class="logging" d="M1183 515 C1210 515 1238 515 1272 515"/>
+  <text class="tiny" x="1194" y="505">ALB logs</text>
+  <path class="config" d="M1278 574 C1220 574 1226 509 1183 509"/>
+  <text class="tiny" x="1195" y="556">TLS cert</text>
+  <path class="flow" d="M990 623 C1120 623 1150 691 1272 691"/>
+  <text class="tiny" x="1092" y="610">SSM via VPCE</text>
+  <path class="config" d="M1415 761v10"/>
+  <text class="tiny" x="1430" y="770">decrypt</text>
+  <path class="logging" d="M990 654 C1120 655 1160 811 1272 811"/>
+  <text class="tiny" x="1100" y="750">Logs via VPCE</text>
+  <path class="logging" d="M1430 865v20"/>
+  <text class="tiny" x="1445" y="879">alarm action</text>
+
+  <!-- Cost and legend footer -->
+  <rect x="300" y="1024" width="1328" height="42" rx="12" fill="#fff8e9" stroke="#ecd29b"/>
+  <text x="324" y="1050" font-size="11" font-weight="700" fill="#79520d">COST HOTSPOTS:</text>
+  <text x="431" y="1050" font-size="11" fill="#695735">internal ALB • 2 interface endpoint services across 2 AZs • KMS key • CloudWatch usage</text>
+  <line x1="1244" y1="1045" x2="1290" y2="1045" stroke="#2878c7" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <text class="tiny" x="1299" y="1049">request/data flow</text>
+  <line x1="1415" y1="1045" x2="1461" y2="1045" stroke="#d88b16" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#arrow-amber)"/>
+  <text class="tiny" x="1470" y="1049">trust/config</text>
+</svg>
