@@ -1,0 +1,31 @@
+Key business assumptions:
+
+a) The API is internal-only. Clients need existing VPN, peering, or private network connectivity.
+b) The assessment accepts a costed design without live AWS deployment.
+c) The API has modest, simple workload requirements: JSON validation and no long-running processing.
+d) mTLS authenticates the caller identity, but application-level authorization is not included.
+e) Availability across two AZs is sufficient; a multi-region or disaster-recovery design is not required.
+f) One AWS account and one dev environment are sufficient.
+g) The default VPC CIDR will not conflict with connected corporate networks.
+h) Log retention of 30 days is sufficient for the assessment.
+i) Test certificates are acceptable; a real domain and commercial certificates are not required.
+j) SNS notification is a demonstration; an operational alerting subscription is not required yet.
+
+Technical debt:
+
+a) Terraform state contains generated CA, server, and client private keys.
+Production certificate lifecycle is not implemented: issuance, rotation, revocation, and private DNS remain outstanding.
+b) Lambda HTTPS egress allows the full VPC CIDR instead of endpoint-specific destinations.
+c) Custom NACLs and VPC Flow Logs are not implemented.
+d) The S3 gateway endpoint is not used by the current Lambda.
+e) ALB access and connection logs are not centrally forwarded or immutable.
+f) Security-group rejects are not visible in ALB logs.
+g) KMS protects the SSM parameter but not all log/S3 data.
+h) No SNS subscriber, pager, or runbook is configured.
+i) No remote Terraform backend, DynamoDB locking, or environment/account state separation exists.
+k) The GitHub OIDC provider, AWS plan role, and live merge rules are not account-verified.
+l) The CI plan uses backend=false; it cannot detect deployed-state drift.
+m) The workflow does not deploy or destroy infrastructure.
+n) No live AWS evidence exists: mTLS, ALB health, logs, alarm delivery, and billing remain unverified.
+o) The /health check tests Lambda liveness but not SSM/KMS dependency readiness.
+mTLS does not provide application-level authorization.
